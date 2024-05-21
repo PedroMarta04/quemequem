@@ -1,0 +1,311 @@
+var personagensLidos = false
+
+const val COR_CASTANHO = "castanho"
+const val COR_OLHOS_CASTANHOS = "castanhos"
+const val GENERO_MASCULINO = "masculino"
+const val GENERO_FEMININO = "feminino"
+const val CABELO_LISO = "liso"
+
+var personagens : Array<Array<Any?>> = arrayOf(
+    arrayOf(1, "Joao", GENERO_MASCULINO, CABELO_LISO, COR_CASTANHO, COR_OLHOS_CASTANHOS),
+    arrayOf(2, "Mario", GENERO_MASCULINO, "careca", "-", "azuis"),
+    arrayOf(3, "Sofia", GENERO_FEMININO, "ondulado", COR_CASTANHO, COR_OLHOS_CASTANHOS),
+    arrayOf(4, "Joana", GENERO_FEMININO, CABELO_LISO, COR_CASTANHO, "verdes")
+)
+
+
+var personagemAdivinhar = personagens.random()
+var personagensPossiveisDeAdivinhar = personagens.copyOf()
+
+
+/**
+ * Divide a input da tentativa no nome do atributo e no valor do atributo
+ * Consoante acerte ou não, filtra a lista de possíveis personagens de acordo com os parametros enviados
+ */
+fun filtrarPersonagensPorTentativa(tentativa: String): Int {
+    // Separa a string da tentativa em 2 palavras
+    val argumentosTentativa = tentativa.split(" ", limit = 2)
+
+    // Manda erro se o formato da pergunta não tiver 2 palavras
+    if (argumentosTentativa.size < 2 ) {
+        println("Pergunta invalida.")
+        return -1
+    }
+
+    val atributo = argumentosTentativa[0]
+    val valorAtributoTentativa = argumentosTentativa[1]
+
+    // Extrai o indice do atributo pelo seu nome
+    val indiceAtributoAFiltrar = when(atributo){
+        "genero" -> 2
+        "cabelo" -> 3
+        "cor" -> 4
+        "olhos" -> 5
+        else -> -1
+    }
+
+    if(indiceAtributoAFiltrar == -1){
+        println("Pergunta invalida.")
+        return -1
+    }
+
+    val valorAtributoPersonagemEscolhida = personagemAdivinhar[indiceAtributoAFiltrar]
+
+    val totalPersonagensPossiveisAntesDaTentativa = personagensPossiveisDeAdivinhar.size
+
+    if(valorAtributoPersonagemEscolhida == valorAtributoTentativa){
+        for(personagem in personagensPossiveisDeAdivinhar){
+            if(personagem[indiceAtributoAFiltrar] != valorAtributoTentativa){
+                retirarDeJogo(personagem[0].toString().toInt())
+            }
+        }
+    } else {
+        for(personagem in personagensPossiveisDeAdivinhar){
+            if(personagem[indiceAtributoAFiltrar] == valorAtributoTentativa){
+                retirarDeJogo(personagem[0].toString().toInt())
+            }
+        }
+    }
+
+    val totalPersonagensPossiveisDepoisDaTentativa = personagensPossiveisDeAdivinhar.size
+
+    // Calcula nº personagens removidas
+    return totalPersonagensPossiveisAntesDaTentativa - totalPersonagensPossiveisDepoisDaTentativa
+}
+
+fun retirarDeJogo(id: Int) {
+    personagensPossiveisDeAdivinhar = personagensPossiveisDeAdivinhar.filter { personagem ->
+        personagem[0] != id
+    }.toTypedArray()
+}
+/**
+ * Retorna a lista de personagens ainda em jogo
+ */
+fun mostrarPersonagens(): String {
+    // Get arrays of each attribute for spacing calculations
+    val nomes = personagensPossiveisDeAdivinhar.map { it[1].toString() }.toTypedArray()
+    val generos = personagensPossiveisDeAdivinhar.map { it[2].toString() }.toTypedArray()
+    val cabelos = personagensPossiveisDeAdivinhar.map { it[3].toString() }.toTypedArray()
+    val cores = personagensPossiveisDeAdivinhar.map { it[4].toString() }.toTypedArray()
+    val olhos = personagensPossiveisDeAdivinhar.map { it[5].toString() }.toTypedArray()
+
+    // Determine the maximum length of each column
+    val espacoNome = numeroDeEspacosEntrePalavrasMenu(nomes)
+    val espacoGenero = numeroDeEspacosEntrePalavrasMenu(generos)
+    val espacoCabelo = numeroDeEspacosEntrePalavrasMenu(cabelos)
+    val espacoCor = numeroDeEspacosEntrePalavrasMenu(cores)
+    val espacoOlhos = numeroDeEspacosEntrePalavrasMenu(olhos)
+
+    // Create the header with proper spacing
+    val header = "Personagens em jogo:\n# ${"Nome".padEnd(espacoNome)} | ${"Genero".padEnd(espacoGenero)} " +
+            "| ${"Cabelo".padEnd(espacoCabelo)} | ${"Cor".padEnd(espacoCor)} | ${"Olhos".padEnd(espacoOlhos)}"
+
+    var listaPersonagens = header
+
+    // Add each character with proper spacing
+    var count = 0
+    for (personagem in personagensPossiveisDeAdivinhar) {
+        val nome = personagem[1].toString().padEnd(espacoNome)
+        val genero = personagem[2].toString().padEnd(espacoGenero)
+        val cabelo = personagem[3].toString().padEnd(espacoCabelo)
+        val cor = personagem[4].toString().padEnd(espacoCor)
+        val olhos = personagem[5].toString().padEnd(espacoOlhos)
+
+        listaPersonagens += "\n$count $nome | $genero | $cabelo | $cor | $olhos"
+
+        count++
+    }
+
+    return listaPersonagens + "\n"
+}
+
+fun encontrarMaioresPalavras(words: Array<String>): Array<String> {
+    var maiorTamanho = 0
+    var maioresPalavras = emptyArray<String>()
+
+    for (word in words) {
+        val length = word.length
+        if (length > maiorTamanho) {
+            maiorTamanho = length
+            maioresPalavras = arrayOf(word)
+        } else if (length == maiorTamanho) {
+            maioresPalavras += word
+        }
+    }
+
+    return maioresPalavras
+}
+
+fun numeroDeEspacosEntrePalavrasMenu(words: Array<String>): Int {
+    val maioresPalavras = encontrarMaioresPalavras(words)
+    val maiorPalavra = maioresPalavras[0]
+    return maiorPalavra.length
+}
+
+fun adicionarEspaco(tamanho: Int, palavra: String): String {
+    val espacos = tamanho - palavra.length
+    return if (palavra == "-") {
+        " $palavra" + " ".repeat(espacos - 1)
+    } else {
+        palavra + " ".repeat(espacos)
+    }
+}
+
+fun lerPersonagens(): Boolean {
+    // Implementar leitura ficheiros (segunda parte)
+
+    personagens = arrayOf(
+        arrayOf(1, "Joao", GENERO_MASCULINO, CABELO_LISO, COR_CASTANHO, COR_OLHOS_CASTANHOS),
+        arrayOf(2, "Mario", GENERO_MASCULINO, "careca", "-", "azuis"),
+        arrayOf(3, "Sofia", GENERO_FEMININO, "ondulado", COR_CASTANHO, COR_OLHOS_CASTANHOS),
+        arrayOf(4, "Joana", GENERO_FEMININO, CABELO_LISO, COR_CASTANHO, "verdes")
+    )
+    return true
+}
+
+fun obterMenuJogo(): String {
+    val texto = "\nEscolha uma opcao:\nperguntar   - para perguntar retirando personagens do jogo\npersonagens -" +
+            " para consultar as personagens em jogo\nsair        - para sair do jogo\n"
+    return texto
+}
+
+fun obterMenu(): String {
+    val texto = "\n##### QUEM E QUEM!!! #####\n\nEscolha uma opcao:\n1 - Jogar\n2 - Ler personagens\n0 - Sair\n"
+    return texto
+}
+
+/**
+ * Pede e valida input de forma a retornar uma das opções do menu de jogo
+ */
+fun pedirInputMenuJogo() : String {
+    var input: String
+    do {
+        input = readlnOrNull().toString()
+        var opcaoInvalida = false
+        val menuJogo2 = obterMenuJogo()
+
+
+        if(input != "perguntar" && input != "personagens" && input != "sair"){
+            println("Opcao invalida.")
+            println(menuJogo2)
+            println("O que pretende fazer?")
+            opcaoInvalida = true
+        }
+    } while (opcaoInvalida)
+
+    return input
+}
+
+/**
+ * Pede tentativa ao jogador e devolve o nr. de personagens removidas
+ */
+fun perguntar(inputTentativa: String, idPersonagem: Int): Int {
+    if(inputTentativa == "") {
+        println("Opcao invalida.\n")
+        return -1
+    }
+
+    val personagensRemovidas: Int = filtrarPersonagensPorTentativa(inputTentativa)
+
+    return personagensRemovidas
+}
+
+fun verificarSeOJogoAcabou(numeroPersonagensRemovidas: Int): Boolean{
+
+        if (numeroPersonagensRemovidas == 1 && personagensPossiveisDeAdivinhar.size == 1) {
+            println("Foi retirada do jogo 1 personagem.")
+            println("Parabens! A personagem e o/a ${personagemAdivinhar[1]}.")
+            return true
+        } else if(numeroPersonagensRemovidas > 1 && personagensPossiveisDeAdivinhar.size == 1){
+            println("Foram retiradas do jogo $numeroPersonagensRemovidas personagens.")
+            println("Parabens! A personagem e o/a ${personagemAdivinhar[1]}.")
+            return true
+        } else if(numeroPersonagensRemovidas == 1) {
+            println("Foi retirada do jogo 1 personagem.")
+        } else if (numeroPersonagensRemovidas > 1) {
+            println("Foram retiradas do jogo $numeroPersonagensRemovidas personagens.")
+        }
+        println(mostrarPersonagens())
+    return false
+}
+
+/**
+ * Faz reset as variaveis de jogo
+ */
+fun gerarPersonagem(): Int {
+    // Coloca todas as personagens eligiveis de serem escolhidas
+    personagensPossiveisDeAdivinhar = personagens.copyOf()
+
+    // Calcula uma nova personagem a adivinhar
+    personagemAdivinhar = personagensPossiveisDeAdivinhar.random()
+
+    return personagemAdivinhar[0].toString().toInt()
+}
+
+fun jogar() {
+    val idPersonagemAdivinhar = gerarPersonagem()
+
+    var opcao: String
+    val menuJogo = obterMenuJogo()
+    var jogoAcabou = false
+    println(menuJogo)
+
+    do {
+        println("O que pretende fazer?")
+        opcao = pedirInputMenuJogo()
+
+
+        when(opcao){
+            "perguntar" -> {
+                println("Identifique o atributo e a sua designacao, por exemplo, \"genero masculino\".")
+                val inputAtributoAPerguntar = readlnOrNull().toString()
+                val personagensRemovidas: Int = perguntar(inputAtributoAPerguntar, idPersonagemAdivinhar)
+
+                if(personagensRemovidas != -1){
+                    jogoAcabou = verificarSeOJogoAcabou(personagensRemovidas)
+                }
+            }
+            "personagens" -> {
+                val personagens = mostrarPersonagens()
+                println("$personagens")
+            }
+        }
+
+    } while(
+        opcao != "sair" // Jogador escolheu opcao sair
+        && !jogoAcabou // condicao jogo terminou
+    )
+}
+
+fun main() {
+    while (true) {
+        val menu = obterMenu()
+        println(menu)
+
+        when(readlnOrNull()){
+            "0" -> {
+                println("Ate logo!")
+                return
+            }
+            "1" -> {
+                when(personagensLidos) {
+                    true -> {
+                        println("Bem vindo. Eu selecionei uma personagem. Tente adivinhar quem e fazendo perguntas sobre suas caracteristicas.")
+                        jogar()
+                    }
+                    false -> {println("Antes de iniciar o jogo tem de ler as personagens.\n(prima enter para voltar ao menu)")
+                        readlnOrNull()
+                    }
+                }
+            }
+            "2" -> {
+                personagensLidos = lerPersonagens()
+                println("Personagens lidas com sucesso.\n(prima enter para voltar ao menu)")
+                readlnOrNull()
+            }
+            else -> {
+                println("Opcao invalida, tente novamente.")
+            }
+        }
+    }
+}
